@@ -1,0 +1,211 @@
+{
+  "app_name": "Lebo",
+  "personality": "1 iOS-Native Clean (with 8 Hand-Drawn/Journal color palette for everyday calmness, and 5 Brutalist high-visibility patterns for Emergency modes)",
+  "personality_one_liner": "A calm, deeply reassuring everyday sanctuary that instantly transforms into a high-visibility, impossible-to-miss command center during an emergency.",
+  "color": {
+    "surface": "#F9F8F6",
+    "onSurface": "#1A1C19",
+    "surfaceSecondary": "#FFFFFF",
+    "onSurfaceSecondary": "#1A1C19",
+    "surfaceTertiary": "#F0EFEA",
+    "onSurfaceTertiary": "#4A4D4A",
+    "surfaceInverse": "#1A1C19",
+    "onSurfaceInverse": "#F9F8F6",
+    "brand": "#7E998A",
+    "onBrand": "#FFFFFF",
+    "brandPrimary": "#6A8576",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#B5C4BC",
+    "onBrandSecondary": "#1A1C19",
+    "brandTertiary": "#E2EAE5",
+    "onBrandTertiary": "#2C3A32",
+    "success": "#4D7C5E",
+    "onSuccess": "#FFFFFF",
+    "warning": "#F79009",
+    "onWarning": "#FFFFFF",
+    "error": "#D92D20",
+    "onError": "#FFFFFF",
+    "info": "#1A1C19",
+    "onInfo": "#FFFFFF",
+    "border": "#E5E4E0",
+    "borderStrong": "#CCCACA",
+    "divider": "#E5E4E0",
+    "muted": "#73726E",
+    
+    "dark_surface": "#121312",
+    "dark_onSurface": "#EAE9E5",
+    "dark_surfaceSecondary": "#1E201E",
+    "dark_onSurfaceSecondary": "#EAE9E5",
+    "dark_surfaceTertiary": "#2A2D2A",
+    "dark_onSurfaceTertiary": "#B0AFAB",
+    "dark_surfaceInverse": "#F9F8F6",
+    "dark_onSurfaceInverse": "#121312",
+    "dark_brand": "#8FAAA0",
+    "dark_onBrand": "#121312",
+    "dark_brandPrimary": "#A3C0B5",
+    "dark_onBrandPrimary": "#121312",
+    "dark_brandSecondary": "#52665D",
+    "dark_onBrandSecondary": "#EAE9E5",
+    "dark_brandTertiary": "#2C3A32",
+    "dark_onBrandTertiary": "#D1E0D8",
+    "dark_success": "#5E9E73",
+    "dark_onSuccess": "#121312",
+    "dark_warning": "#FFB020",
+    "dark_onWarning": "#121312",
+    "dark_error": "#F04438",
+    "dark_onError": "#FFFFFF",
+    "dark_border": "#2E302E",
+    "dark_borderStrong": "#4A4D4A",
+    "dark_divider": "#2E302E",
+    "dark_muted": "#9A9995"
+  },
+  "typography": {
+    "displayFontFamily": "Plus Jakarta Sans",
+    "textFontFamily": "Plus Jakarta Sans",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Generous iOS-native padding for everyday screens to evoke calm; tight, structured padding for emergency states to maximize touch targets.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 6,
+    "md": 12,
+    "lg": 20,
+    "pill": 999
+  },
+  "shadow_tier": "1",
+  "navigation": "bottom_tabs",
+  "icon_set": "Phosphor",
+  "glassmorphism": {
+    "enabled": true,
+    "do's": [
+      "Use over map backgrounds in 'Find Help Nearby' for the bottom sheet header.",
+      "Use on the sticky bottom CTA container to keep content visible underneath."
+    ],
+    "dont's": [
+      "Never use on the Emergency Mode full-screen override (must be high contrast solid red).",
+      "Do not use on forms or journal entries."
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "Home Dashboard",
+      "purpose": "A clear, uncluttered hub indicating safety status and providing a 1-tap emergency trigger.",
+      "states": {
+        "loading": "Centered brand-tinted spinner.",
+        "empty": "All good state with a calm botanical illustration.",
+        "error": "Readable offline message with 'Retry' action."
+      },
+      "layout": "Top section features a large, color-independent Status Indicator (Icon + Text: 'Safe', 'Check-in pending'). Center focus is an oversized 'I NEED HELP' button (swipe/slider style to prevent accidental touch, using high-visibility red). Lower half uses a 2-column grid (`flexWrap: 'wrap'`, `space-between`) for Quick Actions (Start Timer, Safe Journey, Share Location)."
+    },
+    {
+      "name": "Safety",
+      "purpose": "Manage active safety modes and track current location sharing.",
+      "states": {
+        "loading": "Skeleton rows for safety modes.",
+        "empty": "No active modes: calm illustration + 'Start a mode'.",
+        "error": "Could not fetch modes, tap to retry."
+      },
+      "layout": "iOS-native grouped list view for configuring 'Event Mode', 'Work Mode', etc. Sticky primary CTA at the bottom ('Start Mode') wrapped in a glass container over scrolling content."
+    },
+    {
+      "name": "Find Help Nearby",
+      "purpose": "Offline-capable map and directory of shelters, medical, and psychological support.",
+      "states": {
+        "loading": "Map loading skeleton.",
+        "empty": "No resources found in radius. Adjust filters.",
+        "error": "Location access denied. Show prompt."
+      },
+      "layout": "Map view occupies top 60%. A `@gorhom/bottom-sheet` occupies the lower section housing category filters (pills) and the curated directory list. Tapping a list item/pin opens a detail sheet with 1-tap call and walking ETA."
+    },
+    {
+      "name": "Incident Journal",
+      "purpose": "Private, locked space to record incidents securely.",
+      "states": {
+        "loading": "Spinner.",
+        "empty": "Soft, calm journal illustration. 'Your private space to record incidents. Nobody else can see this.'",
+        "error": "Error loading journal."
+      },
+      "layout": "Editorial-style layout with generous `xl` spacing. Soft tinted background (`surface`). FAB in bottom right (`brandPrimary` pill with glass shadow) to log new entry. List of past entries uses `surfaceSecondary` cards with `md` radius."
+    },
+    {
+      "name": "Emergency Mode (Full-Screen)",
+      "purpose": "Override the UI with an impossible-to-miss alert state under extreme stress.",
+      "states": {
+        "loading": "N/A - must render instantly.",
+        "empty": "N/A",
+        "error": "Shows 'Failed to send' with manual SMS fallback."
+      },
+      "layout": "Full-bleed background using `error` (Signal Red). Massive, bold typography ('NOTIFYING CONTACTS...'). Massive touch targets. A central slider to 'CALL EMERGENCY SERVICES' and a large, high-contrast button to 'CANCEL EMERGENCY'."
+    },
+    {
+      "name": "Profile & Settings",
+      "purpose": "Manage trusted contacts, privacy settings, and access the AI Chatbot.",
+      "states": {
+        "loading": "Spinner.",
+        "empty": "N/A",
+        "error": "Load error."
+      },
+      "layout": "iOS-native grouped list rows. App Lock (Biometric/PIN) clearly visible at top. Education Section/Chatbot uses a featured hero card at the top with a subtle background image and top-to-bottom gradient scrim."
+    }
+  ],
+  "images": {
+    "journal_empty_state": {
+      "url": "https://images.unsplash.com/photo-1568819297129-80fd50360f8e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NjV8MHwxfHNlYXJjaHwxfHxjYWxtJTIwam91cm5hbCUyMG5vdGVib29rJTIwbGlmZXN0eWxlfGVufDB8fHx8MTc5MDY2MjEyM3ww&ixlib=rb-4.1.0&q=85",
+      "dark": "https://images.unsplash.com/photo-1568819297129-80fd50360f8e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NjV8MHwxfHNlYXJjaHwxfHxjYWxtJTIwam91cm5hbCUyMG5vdGVib29rJTIwbGlmZXN0eWxlfGVufDB8fHx8MTc5MDY2MjEyM3ww&ixlib=rb-4.1.0&q=85",
+      "alt": "Calm journal notebook"
+    },
+    "emergency_background": {
+      "url": "https://images.unsplash.com/photo-1588268393007-068bc70a443d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzV8MHwxfHNlYXJjaHwxfHxoaWdoJTIwY29udHJhc3QlMjByZWQlMjBlbWVyZ2VuY3klMjBhbGVydCUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzkwNjYyMTIzfDA&ixlib=rb-4.1.0&q=85",
+      "dark": "https://images.unsplash.com/photo-1758404958502-44f156617bae?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzV8MHwxfHNlYXJjaHwyfHxoaWdoJTIwY29udHJhc3QlMjByZWQlMjBlbWVyZ2VuY3klMjBhbGVydCUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzkwNjYyMTIzfDA&ixlib=rb-4.1.0&q=85",
+      "alt": "High contrast red emergency alert background"
+    },
+    "education_hero_bg": {
+      "url": "https://images.unsplash.com/photo-1640017955477-75b58521007d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHwxfHxjYWxtJTIwc2FmZXR5JTIwcmVhc3N1cmluZyUyMGFic3RyYWN0JTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3OTA2NjIxMjN8MA&ixlib=rb-4.1.0&q=85",
+      "dark": "https://images.unsplash.com/photo-1721156009362-006fb0a9466b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHwyfHxjYWxtJTIwc2FmZXR5JTIwcmVhc3N1cmluZyUyMGFic3RyYWN0JTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3OTA2NjIxMjN8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Calm, abstract safety background"
+    }
+  },
+  "haptics": {
+    "emergency_trigger": "heavy",
+    "slider_drag": "selection",
+    "slider_complete": "success",
+    "tab_press": "light",
+    "primary_button": "medium",
+    "start_timer": "medium"
+  },
+  "instructions_to_main_agent": [
+    "Strictly follow the color-independent status rule: Safe/Active/Check-in/Emergency must pair an Icon with Text, never rely on color alone.",
+    "Implement the 'I NEED HELP' emergency trigger as a slider, not a single tap button, to prevent accidental triggers (based on UX research for modern safety apps).",
+    "For the Emergency Mode override screen, discard the soft botanical palette and use the `error` signal red full-bleed. Text must be max contrast.",
+    "Ensure 'Find Help Nearby' uses `@gorhom/bottom-sheet` over the map and glassmorphism on the header of the sheet for iOS-native layered feel.",
+    "Text overlaid on images (e.g., Profile education hero) MUST have a 3-stop vertical gradient scrim (transparent -> 20% -> 70% surfaceInverse) to guarantee WCAG contrast.",
+    "Use Phosphor icons consistently across all tabs and settings rows. Do not mix weights.",
+    "Ensure sticky primary buttons (like 'Start Mode') are placed at the bottom, outside the scroll view, with a glass background to let content scroll behind securely."
+  ]
+}
