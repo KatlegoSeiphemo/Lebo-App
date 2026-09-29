@@ -8,8 +8,10 @@ import { makeStyles, useTheme, spacing, radius } from "@/src/theme";
 import { Icon } from "@/src/components/icon";
 import { Button, Field, Chip, haptic } from "@/src/components/ui";
 import { ScreenHeader } from "@/src/components/screen-header";
+import { Attachments } from "@/src/components/attachments";
 import { api } from "@/src/lib/api";
 import { INCIDENT_CATEGORIES } from "@/src/lib/status";
+import { Attachment } from "@/src/lib/upload";
 
 export default function IncidentNew() {
   const s = useStyles();
@@ -24,6 +26,7 @@ export default function IncidentNew() {
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
   const [people, setPeople] = useState("");
+  const [media, setMedia] = useState<Attachment[]>([]);
 
   const existing = useQuery({ queryKey: ["incident", id], queryFn: () => api.get(`/incidents/${id}`), enabled: editing });
   useEffect(() => {
@@ -32,12 +35,13 @@ export default function IncidentNew() {
       setDescription(existing.data.description);
       setLocation(existing.data.location || "");
       setPeople(existing.data.peopleInvolved || "");
+      setMedia(existing.data.media || []);
     }
   }, [existing.data]);
 
   const save = useMutation({
     mutationFn: () => {
-      const body = { category, description, location, peopleInvolved: people, media: existing.data?.media || [] };
+      const body = { category, description, location, peopleInvolved: people, media };
       return editing ? api.put(`/incidents/${id}`, body) : api.post("/incidents", body);
     },
     onSuccess: () => { haptic("success"); qc.invalidateQueries({ queryKey: ["incidents"] }); router.back(); },
@@ -70,6 +74,8 @@ export default function IncidentNew() {
         <Field label="What happened?" testID="i-desc" value={description} onChangeText={setDescription} placeholder="Describe the incident in your own words…" multiline style={s.textArea} />
         <Field label="Location (optional)" testID="i-loc" value={location} onChangeText={setLocation} placeholder="Where did this happen?" />
         <Field label="People involved (optional)" testID="i-people" value={people} onChangeText={setPeople} placeholder="Names or descriptions" />
+
+        <Attachments value={media} onChange={setMedia} />
 
         <Button title={editing ? "Save changes" : "Save entry"} testID="save-incident" onPress={() => save.mutate()} loading={save.isPending} disabled={!description.trim()} />
       </KeyboardAwareScrollView>

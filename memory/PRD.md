@@ -24,7 +24,7 @@ Central emergency engine, emergency contacts + permissions, safety timers/check-
 - **Safety timers + check-ins:** intervals + grace, I'm safe resets.
 - **Safe Journey**, **Modes** (create/activate/delete), **Location sharing** with "who can see me" + revoke.
 - **Find Help Nearby:** 14 seeded verified SA orgs, category chips, search, device-location distance sort, call/directions.
-- **Incident Journal:** private categorized entries, soft-delete, edit.
+- **Incident Journal:** private categorized entries, soft-delete, edit, and **evidence attachments (photos, audio recordings, documents) in private authenticated object storage** — per-user paths, never public URLs, object-level ownership enforced on download, served via short-lived token query.
 - **Safety Plan builder**, **Digital Safety** education, **Ask Lebo** AI chatbot (Claude Sonnet 4.6).
 - **App Lock:** biometric/PIN + timeout; **Privacy:** analytics + location default, data export, account delete.
 - Ownership isolation verified (user B cannot access user A data). 24/24 backend tests pass.

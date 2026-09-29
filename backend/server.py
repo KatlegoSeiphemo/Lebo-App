@@ -18,12 +18,15 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Literal
 
 import jwt
+import requests
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from dotenv import load_dotenv
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, status, Query
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import Response
 from starlette.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr, Field
 
@@ -41,6 +44,50 @@ JWT_SECRET = os.environ.get("JWT_SECRET", "dev-secret-change-me")
 JWT_ALG = "HS256"
 ACCESS_DAYS = 30
 EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY", "")
+
+# --- Emergent Managed Object Storage (private, authenticated) ---
+STORAGE_BASE = (os.environ.get("INTEGRATION_PROXY_URL") or "").strip() or "https://integrations.emergentagent.com"
+STORAGE_URL = STORAGE_BASE.rstrip("/") + "/objstore/api/v1/storage"
+APP_NAME = "lebo"
+_storage_key: Optional[str] = None
+
+
+def init_storage() -> Optional[str]:
+    global _storage_key
+    if _storage_key:
+        return _storage_key
+    resp = requests.post(f"{STORAGE_URL}/init", json={"emergent_key": EMERGENT_LLM_KEY}, timeout=30)
+    resp.raise_for_status()
+    _storage_key = resp.json()["storage_key"]
+    return _storage_key
+
+
+def _reset_and_init() -> str:
+    global _storage_key
+    _storage_key = None
+    return init_storage()
+
+
+def put_object(path: str, data: bytes, content_type: str) -> dict:
+    key = init_storage()
+    resp = requests.put(f"{STORAGE_URL}/objects/{path}",
+                        headers={"X-Storage-Key": key, "Content-Type": content_type}, data=data, timeout=120)
+    if resp.status_code == 503:
+        key = _reset_and_init()
+        resp = requests.put(f"{STORAGE_URL}/objects/{path}",
+                            headers={"X-Storage-Key": key, "Content-Type": content_type}, data=data, timeout=120)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def get_object(path: str) -> tuple[bytes, str]:
+    key = init_storage()
+    resp = requests.get(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": key}, timeout=60)
+    if resp.status_code == 503:
+        key = _reset_and_init()
+        resp = requests.get(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": key}, timeout=60)
+    resp.raise_for_status()
+    return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
 
 ph = PasswordHasher()
 bearer = HTTPBearer(auto_error=False)
@@ -105,6 +152,21 @@ async def current_user(creds: Optional[HTTPAuthorizationCredentials] = Depends(b
     if not user:
         raise auth_error()
     user["sid"] = sid
+    return user
+
+
+async def user_from_token(token: str) -> dict:
+    try:
+        claims = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALG])
+        uid, sid = claims["sub"], claims["sid"]
+    except Exception:
+        raise auth_error()
+    session = await db.sessions.find_one({"_id": sid, "userId": uid, "revokedAt": None})
+    if not session:
+        raise auth_error()
+    user = await db.users.find_one({"_id": uid}, {"passwordHash": 0})
+    if not user:
+        raise auth_error()
     return user
 
 
@@ -862,6 +924,66 @@ async def chat_message(body: ChatIn, user=Depends(current_user)):
 
 
 # ---------------------------------------------------------------------------
+# Evidence attachments (private object storage)
+# ---------------------------------------------------------------------------
+EXT_MAP = {
+    "image/jpeg": "jpg", "image/jpg": "jpg", "image/png": "png", "image/webp": "webp",
+    "image/heic": "heic", "image/gif": "gif",
+    "audio/m4a": "m4a", "audio/mp4": "m4a", "audio/x-m4a": "m4a", "audio/mpeg": "mp3",
+    "audio/aac": "aac", "audio/wav": "wav",
+    "application/pdf": "pdf", "text/plain": "txt",
+    "application/msword": "doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+}
+
+
+@api.post("/upload")
+async def upload_file(file: UploadFile = File(...), user=Depends(current_user)):
+    data = await file.read()
+    if len(data) > 25 * 1024 * 1024:
+        raise HTTPException(413, "File too large (max 25MB)")
+    content_type = file.content_type or "application/octet-stream"
+    ext = EXT_MAP.get(content_type)
+    if not ext and file.filename and "." in file.filename:
+        ext = file.filename.rsplit(".", 1)[-1].lower()
+    ext = ext or "bin"
+    path = f"{APP_NAME}/uploads/{user['_id']}/{new_id()}.{ext}"
+    try:
+        result = await run_in_threadpool(put_object, path, data, content_type)
+    except requests.HTTPError as e:
+        code = e.response.status_code if e.response is not None else 500
+        if code == 402:
+            raise HTTPException(402, "Storage limit reached. Please try again later.")
+        raise HTTPException(502, "Upload failed")
+    kind = "image" if content_type.startswith("image/") else "audio" if content_type.startswith("audio/") else "document"
+    return {
+        "path": result["path"],
+        "name": file.filename or f"attachment.{ext}",
+        "type": content_type,
+        "kind": kind,
+        "size": result.get("size", len(data)),
+    }
+
+
+@api.get("/files/{path:path}")
+async def get_file(path: str, token: Optional[str] = Query(None),
+                   creds: Optional[HTTPAuthorizationCredentials] = Depends(bearer)):
+    raw = token or (creds.credentials if creds else None)
+    if not raw:
+        raise auth_error()
+    user = await user_from_token(raw)
+    # Object-level authorization: the owner's id is embedded in the path.
+    if not path.startswith(f"{APP_NAME}/uploads/{user['_id']}/"):
+        raise HTTPException(403, "Not authorized to access this file")
+    try:
+        content, ctype = await run_in_threadpool(get_object, path)
+    except requests.HTTPError:
+        raise HTTPException(404, "File not found")
+    return Response(content=content, media_type=ctype,
+                    headers={"Cache-Control": "private, max-age=86400"})
+
+
+# ---------------------------------------------------------------------------
 # Account: data export & delete
 # ---------------------------------------------------------------------------
 @api.get("/account/export")
@@ -947,6 +1069,11 @@ SEED_ORGS = [
 
 @app.on_event("startup")
 async def startup():
+    try:
+        await run_in_threadpool(init_storage)
+        logger.info("Object storage initialised")
+    except Exception as e:
+        logger.error(f"Storage init failed: {e}")
     await db.users.create_index("email", unique=True, sparse=True)
     await db.emergency_contacts.create_index("userId")
     await db.support_organisations.create_index("category")

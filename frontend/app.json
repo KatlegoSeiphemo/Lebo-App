@@ -12,7 +12,10 @@
       "bundleIdentifier": "com.emergent.safetyalert.kan454",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Share your location during emergencies and Safe Journey",
-        "NSFaceIDUsageDescription": "Unlock Lebo and protect your private safety data"
+        "NSFaceIDUsageDescription": "Unlock Lebo and protect your private safety data",
+        "NSCameraUsageDescription": "Attach photos as evidence to your private journal",
+        "NSMicrophoneUsageDescription": "Record audio evidence for your private journal",
+        "NSPhotoLibraryUsageDescription": "Attach photos as evidence to your private journal"
       }
     },
     "android": {
@@ -25,7 +28,10 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "USE_BIOMETRIC",
-        "USE_FINGERPRINT"
+        "USE_FINGERPRINT",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_MEDIA_IMAGES"
       ]
     },
     "web": {
@@ -59,6 +65,19 @@
         "expo-local-authentication",
         {
           "faceIDPermission": "Unlock Lebo and protect your private safety data"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Attach photos as evidence to your private journal",
+          "cameraPermission": "Attach photos as evidence to your private journal"
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Record audio evidence for your private journal"
         }
       ]
     ],
