@@ -9,7 +9,7 @@ import { api } from "@/src/lib/api";
 import { useAuth } from "@/src/lib/auth";
 
 const SLIDES = [
-  { icon: "ShieldStar", title: "Welcome to Lebo", body: "A calm, private safety companion for everyday life — and a fast, clear command centre when you need help." },
+  { icon: "ShieldStar", title: "Welcome to Lebo", body: "Life & Emergency Backup Operator — a calm, private safety companion for everyday life, and a fast, clear command centre when you need help." },
   { icon: "HandTap", title: "Help in one move", body: "Slide the red button on your home screen to alert your trusted contacts instantly. Voice, manual and timers all trigger the same response." },
   { icon: "Clock", title: "Safety check-ins", body: "Ask Lebo to check on you. If you don't confirm you're safe, your contacts are gently notified." },
   { icon: "Lock", title: "Private by design", body: "Your journal, plan and conversations stay yours. Add an app lock and share location only when you choose." },

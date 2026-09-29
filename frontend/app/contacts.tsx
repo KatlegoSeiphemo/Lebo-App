@@ -40,7 +40,10 @@ export default function Contacts() {
   const invite = async (c: any) => {
     try {
       const res = await api.post("/emergency-contacts/invitations", { name: c.name, phone: c.phone });
-      await Share.share({ message: `${res.message}\n${res.link}` });
+      const link = `${process.env.EXPO_PUBLIC_BACKEND_URL}/invite/${res.invitationId}`;
+      await Share.share({
+        message: `${res.message}\n\nTap to accept and download Lebo:\n${link}`,
+      });
     } catch {}
   };
 

@@ -44,7 +44,7 @@ export default function Login() {
             <Icon name="ShieldStar" size={40} color={colors.onBrandPrimary} weight="fill" />
           </View>
           <Text style={s.brand}>Lebo</Text>
-          <Text style={s.tagline}>Your personal safety companion</Text>
+          <Text style={s.tagline}>Life & Emergency Backup Operator</Text>
         </View>
 
         <View style={s.form}>

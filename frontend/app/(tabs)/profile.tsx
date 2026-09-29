@@ -90,7 +90,7 @@ export default function Profile() {
           </View>
         ))}
 
-        <Text style={s.version}>Lebo · Personal Safety · South Africa</Text>
+        <Text style={s.version}>Lebo · Life & Emergency Backup Operator</Text>
       </ScrollView>
     </View>
   );

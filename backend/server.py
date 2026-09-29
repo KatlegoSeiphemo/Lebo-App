@@ -461,10 +461,36 @@ class InviteIn(BaseModel):
 async def create_invitation(body: InviteIn, user=Depends(current_user)):
     token = new_id()
     doc = {"_id": token, "userId": user["_id"], "inviterName": user.get("name", ""),
-           "name": body.name, "phone": body.phone, "status": "pending", "createdAt": now_utc()}
+           "name": body.name, "phone": body.phone, "status": "pending", "createdAt": now_utc(),
+           "respondedAt": None}
     await db.emergency_contact_invitations.insert_one(doc)
-    return {"invitationId": token, "link": f"https://lebo.app/invite/{token}",
-            "message": f"{user.get('name','A friend')} has invited you to be their emergency contact on Lebo."}
+    return {"invitationId": token,
+            "message": f"{user.get('name','A friend')} has invited you to be their emergency contact on Lebo (Life & Emergency Backup Operator)."}
+
+
+@api.get("/invitations/{token}")
+async def get_invitation(token: str):
+    """Public — the invite landing page reads this without auth."""
+    inv = await db.emergency_contact_invitations.find_one({"_id": token})
+    if not inv:
+        raise HTTPException(404, "This invitation link is invalid or has expired.")
+    return {"id": inv["_id"], "inviterName": inv.get("inviterName", "A friend"),
+            "name": inv.get("name", ""), "status": inv.get("status", "pending")}
+
+
+class InviteRespondIn(BaseModel):
+    response: Literal["accepted", "declined"]
+
+
+@api.post("/invitations/{token}/respond")
+async def respond_invitation(token: str, body: InviteRespondIn):
+    """Public — recipient accepts or declines from the landing page."""
+    inv = await db.emergency_contact_invitations.find_one({"_id": token})
+    if not inv:
+        raise HTTPException(404, "This invitation link is invalid or has expired.")
+    await db.emergency_contact_invitations.update_one(
+        {"_id": token}, {"$set": {"status": body.response, "respondedAt": now_utc()}})
+    return {"status": body.response, "inviterName": inv.get("inviterName", "A friend")}
 
 
 # ---------------------------------------------------------------------------
